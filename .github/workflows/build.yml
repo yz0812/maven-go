@@ -2,13 +2,8 @@ name: Build and Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*.*.*'
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -110,8 +105,10 @@ jobs:
           
           # App 压缩包 (便携版)
           if [ -d src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app ]; then
+            # 使用绝对路径避免相对路径计算错误
+            ARTIFACT_DIR="$(pwd)/artifacts"
             cd src-tauri/target/${{ matrix.target }}/release/bundle/macos/
-            tar -czf ../../../../../../../../../artifacts/MavenGo-${{ matrix.target }}.app.tar.gz *.app
+            tar -czf "${ARTIFACT_DIR}/MavenGo-${{ matrix.target }}.app.tar.gz" *.app
             cd -
           fi
 
