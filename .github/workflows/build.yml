@@ -85,16 +85,16 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path artifacts -Force
           
-          # MSI 安装包
-          $msiFiles = Get-ChildItem -Path "src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi" -ErrorAction SilentlyContinue
-          if ($msiFiles) {
-            Copy-Item $msiFiles[0].FullName -Destination "artifacts/MavenGo-${{ matrix.target }}.msi"
-          }
-          
-          # NSIS 安装包 (便携版)
+          # NSIS 安装包
           $nsisFiles = Get-ChildItem -Path "src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe" -ErrorAction SilentlyContinue
           if ($nsisFiles) {
-            Copy-Item $nsisFiles[0].FullName -Destination "artifacts/MavenGo-${{ matrix.target }}-portable.exe"
+            Copy-Item $nsisFiles[0].FullName -Destination "artifacts/MavenGo-${{ matrix.target }}-setup.exe"
+          }
+          
+          # 原始 EXE 便携版（免安装）
+          $exePath = "src-tauri/target/${{ matrix.target }}/release/mavengo.exe"
+          if (Test-Path $exePath) {
+            Copy-Item $exePath -Destination "artifacts/MavenGo-${{ matrix.target }}-portable.exe"
           }
 
       - name: Prepare artifacts (macOS)
