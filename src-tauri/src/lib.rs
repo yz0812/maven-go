@@ -106,7 +106,19 @@ fn get_maven_repo_path() -> Result<String, String> {
         for cmd in maven_commands {
             println!("[DEBUG] 尝试命令: {}", cmd);
 
-            let output = match Command::new(cmd).arg("-v").output() {
+            // 创建命令构建器
+            let mut command = Command::new(cmd);
+            command.arg("-v");
+
+            // Windows 下隐藏命令行窗口
+            #[cfg(target_os = "windows")]
+            {
+                use std::os::windows::process::CommandExt;
+                const CREATE_NO_WINDOW: u32 = 0x08000000;
+                command.creation_flags(CREATE_NO_WINDOW);
+            }
+
+            let output = match command.output() {
                 Ok(o) => {
                     println!("[DEBUG] {} 执行成功", cmd);
                     o
