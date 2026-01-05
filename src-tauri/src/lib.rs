@@ -284,14 +284,21 @@ fn scan_invalid_artifacts(repo_path: String) -> Result<Vec<InvalidArtifact>, Str
                 // 尝试作为 ZIP 打开
                 match fs::File::open(path) {
                     Ok(file) => {
-                        if ZipArchive::new(file).is_err() {
-                            is_bad = true;
-                            reason = "ZIP 格式损坏，无法解压".to_string();
+                        match ZipArchive::new(file) {
+                            Ok(_) => {
+                                // ZIP 格式正常，不是损坏文件
+                            }
+                            Err(e) => {
+                                is_bad = true;
+                                // 记录详细错误原因
+                                reason = format!("ZIP 格式损坏: {}", e);
+                                println!("[ZIP 验证失败] {}: {}", path.display(), e);
+                            }
                         }
                     }
-                    Err(_) => {
+                    Err(e) => {
                         is_bad = true;
-                        reason = "无法读取文件".to_string();
+                        reason = format!("无法读取文件: {}", e);
                     }
                 }
             }

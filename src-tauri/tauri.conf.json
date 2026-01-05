@@ -14,7 +14,9 @@
       {
         "title": "mavengo",
         "width": 1000,
-        "height": 850
+        "height": 850,
+        "decorations": true,
+        "skipTaskbar": false
       }
     ],
     "security": {

@@ -28,5 +28,5 @@ roxmltree = "0.20"
 dirs = "5"
 rayon = "1.10"
 num_cpus = "1.16"
-zip = { version = "2", default-features = false, features = ["deflate"] }
+zip = { version = "2", default-features = false, features = ["deflate", "bzip2", "zstd"] }
 
