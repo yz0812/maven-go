@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 use walkdir::WalkDir;
 use rayon::prelude::*;
+use zip::ZipArchive;
 
 // ===================== 数据结构 =====================
 
@@ -27,7 +28,6 @@ pub struct CleanResult {
 
 // ===================== 常量配置 =====================
 
-const MAX_JAR_SIZE: u64 = 1024; // 1KB
 const BAD_POM_KEYWORDS: &[&str] = &[
     "<!DOCTYPE html>",
     "<title>Harbor</title>",
@@ -279,12 +279,19 @@ fn scan_invalid_artifacts(repo_path: String) -> Result<Vec<InvalidArtifact>, Str
             let mut is_bad = false;
             let mut reason = String::new();
 
-            // 检查损坏的 JAR
+            // 检查损坏的 JAR（验证 ZIP 格式完整性）
             if file_name.ends_with(".jar") {
-                if let Ok(metadata) = fs::metadata(path) {
-                    if metadata.len() < MAX_JAR_SIZE {
+                // 尝试作为 ZIP 打开
+                match fs::File::open(path) {
+                    Ok(file) => {
+                        if ZipArchive::new(file).is_err() {
+                            is_bad = true;
+                            reason = "ZIP 格式损坏，无法解压".to_string();
+                        }
+                    }
+                    Err(_) => {
                         is_bad = true;
-                        reason = format!("小于{}字节的JAR文件", MAX_JAR_SIZE);
+                        reason = "无法读取文件".to_string();
                     }
                 }
             }
@@ -295,7 +302,7 @@ fn scan_invalid_artifacts(repo_path: String) -> Result<Vec<InvalidArtifact>, Str
                     for keyword in BAD_POM_KEYWORDS {
                         if preview.contains(keyword) {
                             is_bad = true;
-                            reason = "包含Harbor错误页面的POM文件".to_string();
+                            reason = "包含错误页面的POM文件".to_string();
                             break;
                         }
                     }

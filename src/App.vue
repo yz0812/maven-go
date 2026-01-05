@@ -103,6 +103,27 @@ async function cleanAll() {
     isCleaning.value = false;
   }
 }
+
+// 双击复制路径
+async function copyPath(path: string) {
+  try {
+    await navigator.clipboard.writeText(path);
+    successMsg.value = "路径已复制到剪贴板";
+    setTimeout(() => {
+      if (successMsg.value === "路径已复制到剪贴板") {
+        successMsg.value = "";
+      }
+    }, 2000);
+  } catch (err) {
+    errorMsg.value = `复制失败: ${err}`;
+  }
+}
+
+// 路径中间省略（保留前30字符+后20字符）
+function truncatePath(path: string): string {
+  if (path.length <= 50) return path;
+  return `${path.substring(0, 30)}...${path.substring(path.length - 20)}`;
+}
 </script>
 
 <template>
@@ -219,24 +240,28 @@ async function cleanAll() {
         </div>
 
         <div class="flex-1 overflow-y-auto border border-gray-200 rounded-lg min-h-0">
-          <table class="w-full text-sm">
+          <table class="w-full text-sm table-fixed">
             <thead class="bg-gray-50 sticky top-0">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[50%]">
                   路径
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-[192px]">
                   构件名称
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider min-w-[128px]">
                   损坏原因
                 </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr v-for="(artifact, index) in invalidArtifacts" :key="index" class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-gray-700 font-mono text-xs">
-                  {{ artifact.folder }}
+                <td
+                  class="px-4 py-3 text-gray-700 font-mono text-xs cursor-pointer hover:bg-blue-50 transition"
+                  @dblclick="copyPath(artifact.folder)"
+                  :title="artifact.folder"
+                >
+                  {{ truncatePath(artifact.folder) }}
                 </td>
                 <td class="px-4 py-3 text-gray-900 font-medium">
                   {{ artifact.base_name }}
